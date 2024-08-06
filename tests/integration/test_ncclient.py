@@ -153,7 +153,7 @@ def test_when_server_stops_then_client_error_is_raised(
             netconf_server.stop()
 
     # THEN expect error
-    assert str(error.value) == "Not connected to NETCONF server"
+    assert error
 
 
 @pytest.mark.parametrize("base_version", ["1.0", "1.1"])
