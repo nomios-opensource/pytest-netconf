@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "pytest-netconf"
+version = "0.1.0"
+description = "A pytest plugin that provides a mock NETCONF (RFC6241/RFC6242) server for local testing."
+authors = ["Adam Kirchberger <adam.kirchberger@nomios.co.uk>"]
+license = "Apache License 2.0"
+readme = "README.md"
+keywords = [
+    "Netconf",
+    "Network automation",
+    "Network engineering",
+    "Network testing"
+]
+classifiers = [
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Telecommunications Industry",
+    "Topic :: System :: Networking",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Testing :: Mocking",
+    "License :: OSI Approved :: Apache Software License",
+]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
+ncclient = "^0.6.15"
+pytest-forked = "^1.6.0"
+pytest-rerunfailures = "^14.0"
+scrapli-netconf = "^2024.7.30"
+netconf-client = "^3.1.1"
+
+[tool.pytest.ini_options]
+addopts = "--cov=pytest_netconf --cov-report term-missing --reruns 1 --forked -vv"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+paramiko = "^3.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins.pytest11]
+pytest_netconf = "pytest_netconf.pytest_plugin"
