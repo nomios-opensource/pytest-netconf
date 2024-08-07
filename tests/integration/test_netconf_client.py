@@ -264,3 +264,29 @@ def test_when_connecting_using_username_and_rsa_key_then_authentication_passes(
     ) as session:
         # THEN expect to be connected
         assert session.session_id
+
+def test_when_connecting_using_username_and_wrong_key_then_authentication_fails(
+    netconf_server, tmp_path
+):
+    # GIVEN generated key
+    key_filepath = (tmp_path / "key").as_posix()
+    key = paramiko.RSAKey.generate(bits=2048)
+    key.write_private_key_file(key_filepath)
+
+    # GIVEN SSH username and a different key have been defined
+    netconf_server.username = "admin"
+    netconf_server.authorized_key = f"foobar"
+
+    # WHEN connecting using wrong key
+    with pytest.raises(paramiko.ssh_exception.AuthenticationException) as error:
+        with connect_ssh(
+            host="localhost",
+            port=8830,
+            username="foo",
+            password=None,
+            key_filename=key_filepath,
+        ) as session:
+            Manager(session=session)
+
+    # THEN expect error
+    assert "Authentication failed." in str(error)
