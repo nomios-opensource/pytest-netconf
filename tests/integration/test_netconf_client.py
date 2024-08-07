@@ -144,12 +144,14 @@ def test_when_server_stops_then_client_error_is_raised(
             port=8830,
             username="admin",
             password="admin",
+            general_timeout=5,
         ) as session:
             manager = Manager(session=session)
 
             # WHEN server stops
             netconf_server.stop()
             manager.get_config()  # and a request is attempted
+            session.session_id # needed to probe session
 
     # THEN expect error
     assert str(error.value) == "Socket is closed"

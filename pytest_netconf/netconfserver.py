@@ -294,7 +294,10 @@ class NetconfServer:
 
         finally:
             if channel:
-                channel.close()
+                try:
+                    channel.close()
+                except EOFError:
+                    pass
             transport.close()
 
     def _handle_requests(self, channel: paramiko.Channel) -> None:
