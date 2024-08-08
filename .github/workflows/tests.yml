@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Test with pytest
-        run: poetry run coverage run -m pytest -vv
+        run: poetry run pytest -vv
 
   coverage:
     runs-on: ubuntu-latest
@@ -53,7 +53,10 @@ jobs:
       - name: Test with pytest
         run: |
           MODNAME=$(echo "${PWD##*/}" | sed 's/-/_/g')
-          poetry run coverage run -m pytest -v --cov=$MODNAME --cov-append --cov-report=xml
+          poetry run coverage run --source $MODNAME --parallel-mode -m pytest
+          poetry run coverage combine
+          poetry run coverage report
+          poetry run coverage xml
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:

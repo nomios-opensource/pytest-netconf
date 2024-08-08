@@ -296,7 +296,7 @@ class NetconfServer:
             if channel:
                 try:
                     channel.close()
-                except EOFError:
+                except EOFError:  # pragma: no cover
                     pass
             transport.close()
 
