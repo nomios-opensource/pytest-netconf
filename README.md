@@ -30,6 +30,10 @@ The clients below have been tested
 - `netconf-client` :white_check_mark:
 - `scrapli-netconf` :white_check_mark:
 
+## Installation
+
+Install using `pip install pytest-netconf` or `poetry add --group dev pytest-netconf`
+
 ## Quickstart
 
 The plugin will install a pytest fixture named `netconf_server`, which will start an SSH server with settings you provide, and **only** reply to requests which you define with corresponding responses.
