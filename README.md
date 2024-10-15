@@ -1,7 +1,7 @@
 # pytest-netconf
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/nomios-opensource/pytest-netconf/publish.yml)
-![Codecov](https://img.shields.io/codecov/c/github/nomios-opensource/pytest-netconf)  
+[![codecov](https://codecov.io/gh/nomios-opensource/pytest-netconf/branch/develop/graph/badge.svg?token=iKZNzUr2LI)](https://codecov.io/gh/nomios-opensource/pytest-netconf)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytest-netconf)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pytest-netconf)
 ![GitHub License](https://img.shields.io/github/license/nomios-opensource/pytest-netconf)
