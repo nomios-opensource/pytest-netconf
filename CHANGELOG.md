@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.1](https://github.com/nomios-opensource/pytest-netconf/compare/v0.1.0...v0.1.1) (2024-10-15)
+
+
+### Bug Fixes
+
+* update dependencies ([03857e0](https://github.com/nomios-opensource/pytest-netconf/commit/03857e0542e329464698fdf6c8caa88175f2f48e))
+
+
+### Documentation
+
+* add installation instructions ([12ae0c9](https://github.com/nomios-opensource/pytest-netconf/commit/12ae0c92ed8fd56af8d6802754fb1efa51b6f9be))
+* update codecov badge ([addbcfd](https://github.com/nomios-opensource/pytest-netconf/commit/addbcfdbb7489af033d822896c14fa27fc89d5c7))
+
 ## 0.1.0 (2024-08-08)
 
 
