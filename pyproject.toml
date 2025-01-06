@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-netconf"
-version = "0.1.0"
+version = "0.1.1"
 description = "A pytest plugin that provides a mock NETCONF (RFC6241/RFC6242) server for local testing."
 authors = ["Adam Kirchberger <adam.kirchberger@nomios.co.uk>"]
 license = "Apache License 2.0"
