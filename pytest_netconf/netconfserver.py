@@ -231,6 +231,7 @@ class NetconfServer:
             OSError: If the server fails to bind to the specified port.
         """
         self.running = True
+        self._hello_sent = False  # reset in case of restart
         self._bind_socket()
         self._thread = threading.Thread(target=self._run)
         self._thread.start()
