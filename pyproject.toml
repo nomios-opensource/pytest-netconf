@@ -23,9 +23,9 @@ classifiers = [
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
-ncclient = "^0.6.15"
+ncclient = "^0.6.15 || ^0.7.0"
 pytest-rerunfailures = "^14.0"
-scrapli-netconf = "^2024.7.30"
+scrapli-netconf = "^2024.7.30 || ^2025.0.0"
 netconf-client = "^3.1.1"
 coverage = "^7.6.1"
 
