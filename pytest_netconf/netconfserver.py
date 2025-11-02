@@ -230,6 +230,10 @@ class NetconfServer:
         Raises:
             OSError: If the server fails to bind to the specified port.
         """
+        if self.running:
+            logger.warning("server is already running")
+            return
+
         self.running = True
         self._hello_sent = False  # reset in case of restart
         self._bind_socket()
@@ -275,6 +279,8 @@ class NetconfServer:
 
     def _run(self) -> None:
         """Run the server to accept connections and process requests."""
+        channel = None
+        transport = None
         try:
             self._client_socket, _ = self._server_socket.accept()
             transport = paramiko.Transport(self._client_socket)
@@ -293,13 +299,18 @@ class NetconfServer:
             if server.event.is_set():
                 self._handle_requests(channel)
 
+        except (ConnectionAbortedError, OSError):
+            if not self.running:
+                return  # expected during shutdown
+            raise  # unexpected  # pragma: no cover
         finally:
             if channel:
                 try:
                     channel.close()
                 except EOFError:  # pragma: no cover
                     pass
-            transport.close()
+            if transport:
+                transport.close()
 
     def _handle_requests(self, channel: paramiko.Channel) -> None:
         """
