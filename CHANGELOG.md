@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0](https://github.com/nomios-opensource/pytest-netconf/compare/v0.1.1...v0.2.0) (2025-11-03)
+
+
+### Features
+
+* add call tracking ([21f20aa](https://github.com/nomios-opensource/pytest-netconf/commit/21f20aa2fc95b3694c9dd5cd0ca31893e66a73b9))
+
+
+### Bug Fixes
+
+* hanging when attempting to start already running server ([38f45b5](https://github.com/nomios-opensource/pytest-netconf/commit/38f45b59f0201135f3b1ee92e22a94b9254d4dd2))
+* server not shutting down socket cleanly ([20122c9](https://github.com/nomios-opensource/pytest-netconf/commit/20122c966e857edc80b39c2d101dc7e468cb6daa))
+* update dependencies and netconf clients ([430fcba](https://github.com/nomios-opensource/pytest-netconf/commit/430fcba5a2701b6289db838897bc517302a0253c))
+
 ## [0.1.1](https://github.com/nomios-opensource/pytest-netconf/compare/v0.1.0...v0.1.1) (2025-01-06)
 
 
