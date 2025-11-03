@@ -254,6 +254,67 @@ def test_netconf_key_auth(
 ```
 </details>
 
+<details>
+<summary>Call Tracking</summary>
+<br>
+
+```python
+
+def test_call_tracking(netconf_server):
+    # GIVEN server request and response
+    handler = netconf_server.expect_request(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<nc:rpc xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="{message_id}">'
+        "<nc:get-config><nc:source><nc:running/></nc:source></nc:get-config>"
+        "</nc:rpc>"
+    ).respond_with(
+        """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <rpc-reply message-id="{message_id}"
+          xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <data>
+                <interfaces>
+                    <interface>
+                        <name>eth0</name>
+                    </interface>
+                </interfaces>
+            </data>
+        </rpc-reply>
+        """
+    )
+
+    # WHEN fetching rpc response from server
+    with manager.connect(
+        host="localhost",
+        port=8830,
+        username="admin",
+        password="admin",
+        hostkey_verify=False,
+    ) as m:
+        m.get_config(source="running").data_xml
+
+    # THEN expect calls to be made
+    assert netconf_server.was_called()
+    assert netconf_server.get_call_count() == 1
+    assert handler.was_called()
+    assert handler.get_call_count() == 1
+```
+</details>
+
+
+## Call Tracking
+
+Call tracking is implemented to verify received client requests and responses sent by the server.
+
+Look at the [Examples](#examples) section to see how this can being used.
+
+**Server-level tracking**
+- `netconf_server.was_called()` - Check if any requests were made
+- `netconf_server.get_call_count()` - Get total number of requests
+
+**Request handler tracking**
+- `handler.was_called()` - Check if this specific request pattern was called
+- `handler.get_call_count()` - Get number of calls for this pattern
 
 ## Versioning
 

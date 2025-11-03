@@ -21,6 +21,7 @@ import logging
 import threading
 import typing as t
 from enum import Enum
+from dataclasses import dataclass
 import xml.etree.ElementTree as ET
 import paramiko
 
@@ -28,6 +29,17 @@ from .settings import Settings
 from .exceptions import UnexpectedRequestError, RequestError
 from .sshserver import SSHServer
 from .constants import RPC_REPLY_OK, RPC_REPLY_ERROR
+
+
+@dataclass
+class CallRecord:
+    """
+    Historic record of a request and response.
+    """
+
+    request: str
+    response: str
+    message_id: str
 
 
 logging.basicConfig(level=logging.INFO)
@@ -69,6 +81,7 @@ class NetconfServer:
         self.capabilities: t.List[str] = []
 
         self.responses: t.List[t.Tuple[str, str]] = []
+        self._call_history: t.List[CallRecord] = []
 
     @property
     def host(self) -> str:
@@ -222,6 +235,24 @@ class NetconfServer:
             </hello>"""
 
         return response.strip("\n")
+
+    def was_called(self) -> bool:
+        """
+        Check if any requests have been made to the server.
+
+        Returns:
+            bool: True if at least one request was made, False otherwise.
+        """
+        return len(self._call_history) > 0
+
+    def get_call_count(self) -> int:
+        """
+        Get the total number of requests made to the server.
+
+        Returns:
+            int: The number of requests made.
+        """
+        return len(self._call_history)
 
     def start(self) -> None:
         """
@@ -504,14 +535,25 @@ class NetconfServer:
                 )
             )
 
+        def _send_and_record(_response: str) -> None:
+            """Send response and record the call."""
+            formatted = _fmt_response(_response)
+            channel.sendall(formatted.encode())
+
+            call_record = CallRecord(
+                request=request,
+                response=_response,
+                message_id=message_id,
+            )
+            self._call_history.append(call_record)
+
         if "close-session" in request:
             channel.sendall(
                 _fmt_response(RPC_REPLY_OK.format(message_id=message_id)).encode()
-            ),
+            )
 
         elif response:
-            response = response.format(message_id=message_id)
-            channel.sendall(_fmt_response(response).encode())
+            _send_and_record(response.format(message_id=message_id))
         else:
             error_response = RPC_REPLY_ERROR.format(
                 type="rpc",
@@ -519,33 +561,33 @@ class NetconfServer:
                 tag="operation-failed",
                 message="pytest-netconf: requested rpc is unknown and has no response defined",
             )
-            channel.sendall(_fmt_response(error_response).encode())
+            _send_and_record(error_response)
             raise UnexpectedRequestError(
                 f"Received request which has no response defined: {request}"
             )
 
     def expect_request(
         self, request_pattern: t.Union[str, t.Pattern[str]]
-    ) -> "NetconfServer.ResponseSetter":
+    ) -> "NetconfServer.RequestHandler":
         """
-        Define expected requests and associated responses.
+        Handle expected requests.
 
         Args:
             request_pattern (t.Union[str, Pattern[str]]): The expected request pattern.
 
         Returns:
-            NetconfServer.ResponseSetter: A ResponseSetter to set the response for the request.
+            NetconfServer.RequestHandler: A RequestHandler to set the response for the request.
         """
-        return self.ResponseSetter(self, request_pattern)
+        return self.RequestHandler(self, request_pattern)
 
-    class ResponseSetter:
-        """Helper class to set responses for expected requests."""
+    class RequestHandler:
+        """Helper class to set responses for expected requests and track calls."""
 
         def __init__(
             self, server: "NetconfServer", request_pattern: t.Union[str, t.Pattern[str]]
         ):
             """
-            Initialize the ResponseSetter.
+            Initialize the RequestHandler.
 
             Args:
                 server (NetconfServer): The server instance to set the response on.
@@ -554,7 +596,7 @@ class NetconfServer:
             self.server = server
             self._request_pattern = request_pattern
 
-        def respond_with(self, response: str) -> "NetconfServer.ResponseSetter":
+        def respond_with(self, response: str) -> "NetconfServer.RequestHandler":
             """
             Set the response for the specified request pattern.
 
@@ -562,7 +604,49 @@ class NetconfServer:
                 response (str): The response to associate with the request pattern.
 
             Returns:
-                NetconfServer.ResponseSetter: The current instance for chaining.
+                NetconfServer.RequestHandler: The current instance for chaining.
             """
             self.server.responses.append((self._request_pattern, response))
             return self
+
+        def was_called(self) -> bool:
+            """
+            Check if any requests matching this handler's pattern have been made.
+
+            Returns:
+                bool: True if at least one matching request was made, False otherwise.
+            """
+            return self.get_call_count() > 0
+
+        def get_call_count(self) -> int:
+            """
+            Get the number of requests that matched this handler's pattern.
+
+            Returns:
+                int: The number of matching requests made.
+            """
+            count = 0
+            for call_record in self.server._call_history:
+                if self._request_matches_pattern(call_record.request):
+                    count += 1
+            return count
+
+        def _request_matches_pattern(self, request: str) -> bool:
+            """
+            Check if a request matches this handler's pattern.
+
+            Args:
+                request (str): The request to check.
+
+            Returns:
+                bool: True if the request matches the pattern, False otherwise.
+            """
+            formatted_pattern = self._request_pattern.format(
+                message_id=self.server._extract_message_id(request),
+                session_id=self.server.SESSION_ID,
+            )
+
+            # Check for exact match or regex match
+            return (formatted_pattern == request) or bool(
+                re.search(formatted_pattern, request, flags=re.DOTALL)
+            )

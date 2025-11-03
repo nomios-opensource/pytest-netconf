@@ -176,3 +176,149 @@ def test_when_extract_message_id_then_string_is_returned(test_input, expected):
 
     # THEN expect result
     assert message_id == expected
+
+
+def test_when_no_requests_made_then_was_called_returns_false():
+    # GIVEN netconf server instance
+    nc = NetconfServer()
+
+    # WHEN checking if server was called
+    result = nc.was_called()
+
+    # THEN expect false
+    assert result is False
+
+
+def test_when_no_requests_made_then_call_count_returns_zero():
+    # GIVEN netconf server instance
+    nc = NetconfServer()
+
+    # WHEN getting call count
+    result = nc.get_call_count()
+
+    # THEN expect zero
+    assert result == 0
+
+
+@patch("paramiko.Channel")
+def test_when_request_made_then_was_called_returns_true(mock_channel):
+    # GIVEN netconf server instance
+    nc = NetconfServer()
+
+    # GIVEN mock channel
+    mock_channel.sendall = MagicMock()
+
+    # GIVEN configured request and response
+    nc.expect_request("get").respond_with("<data/>")
+
+    # WHEN sending a response (to an made up request)
+    nc._send_response("<rpc message-id='123'><get/></rpc>", mock_channel)
+
+    # THEN expect was_called to return true
+    assert nc.was_called() is True
+
+
+@patch("paramiko.Channel")
+def test_when_multiple_requests_made_then_call_count_returns_correct_number(
+    mock_channel,
+):
+    # GIVEN netconf server instance
+    nc = NetconfServer()
+
+    # GIVEN mock channel
+    mock_channel.sendall = MagicMock()
+
+    # GIVEN configured request and response
+    nc.expect_request("get").respond_with("<data/>")
+
+    # WHEN sending multiple responses (simulating multiple requests)
+    nc._send_response("<rpc message-id='123'><get/></rpc>", mock_channel)
+    nc._send_response("<rpc message-id='124'><get/></rpc>", mock_channel)
+    nc._send_response("<rpc message-id='125'><get/></rpc>", mock_channel)
+
+    # THEN expect call count to be 3
+    assert nc.get_call_count() == 3
+
+
+def test_when_no_matching_requests_made_then_request_handler_was_called_returns_false():
+    # GIVEN netconf server instance
+    nc = NetconfServer()
+
+    # GIVEN request handler
+    handler = nc.expect_request("get")
+
+    # WHEN checking if handler was called (no requests made)
+    result = handler.was_called()
+
+    # THEN expect false
+    assert result is False
+
+
+def test_when_no_matching_requests_made_then_request_handler_call_count_returns_zero():
+    # GIVEN netconf server instance
+    nc = NetconfServer()
+
+    # GIVEN request handler
+    handler = nc.expect_request("get")
+
+    # WHEN getting call count (no requests made)
+    result = handler.get_call_count()
+
+    # THEN expect zero
+    assert result == 0
+
+
+@patch("paramiko.Channel")
+def test_when_matching_request_made_then_request_handler_was_called_returns_true(
+    mock_channel,
+):
+    # GIVEN netconf server instance
+    nc = NetconfServer()
+
+    # GIVEN request handler
+    handler = nc.expect_request("get").respond_with("<data/>")
+
+    # GIVEN mock channel
+    mock_channel.sendall = MagicMock()
+
+    # WHEN sending a matching request
+    nc._send_response("<rpc message-id='123'><get-config/></rpc>", mock_channel)
+
+    # THEN expect handler was_called to return true
+    assert handler.was_called() is True
+
+
+@patch("paramiko.Channel")
+def test_when_multiple_matching_requests_made_then_request_handler_call_count_returns_correct_number(
+    mock_channel,
+):
+    # GIVEN netconf server instance
+    nc = NetconfServer()
+
+    # GIVEN edit request handler
+    edit_handler = nc.expect_request("edit").respond_with("<data/>")
+
+    # GIVEN get request handler
+    get_handler = nc.expect_request("get").respond_with("<data/>")
+
+    # GIVEN mock channel
+    mock_channel.sendall = MagicMock()
+
+    # WHEN sending multiple matching requests
+    nc._send_response("<rpc message-id='123'><get/></rpc>", mock_channel)
+    nc._send_response("<rpc message-id='124'><get/></rpc>", mock_channel)
+
+    # AND sending non-matching request
+    nc._send_response("<rpc message-id='125'><edit/></rpc>", mock_channel)
+
+    # THEN expect total calls to be 3
+    assert nc.was_called()
+    assert nc.get_call_count() == 3
+
+    # THEN expect get handler call count to be 2
+    assert get_handler.was_called()
+    assert get_handler.get_call_count() == 2
+
+    # THEN expect edit handler to be called once
+    assert edit_handler.was_called()
+    assert edit_handler.get_call_count() == 1
