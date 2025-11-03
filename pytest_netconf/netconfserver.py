@@ -282,6 +282,10 @@ class NetconfServer:
         if self._client_socket:
             self._client_socket.close()
         if self._server_socket:
+            try:
+                self._server_socket.shutdown(socket.SHUT_RDWR)
+            except OSError:  # pragma: no cover
+                pass  # already shutdown
             self._server_socket.close()
         if self._thread:
             self._thread.join()
