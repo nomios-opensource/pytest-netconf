@@ -39,6 +39,17 @@ def test_when_server_started_twice_then_no_error_occurs(netconf_server: NetconfS
     # THEN server remains running and no errors occur
     assert netconf_server.running
 
+def test_when_server_stopped_twice_then_no_error_occurs(netconf_server: NetconfServer):
+    # GIVEN server is stopped
+    netconf_server.stop()
+    assert not netconf_server.running
+
+    # WHEN attempting to stop the server again
+    netconf_server.stop()
+
+    # THEN server remains stopped and no errors occur
+    assert not netconf_server.running
+
 
 def test_when_server_stopped_without_connection(netconf_server: NetconfServer):
     # GIVEN server is running

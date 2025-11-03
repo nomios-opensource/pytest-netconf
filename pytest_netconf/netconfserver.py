@@ -274,6 +274,10 @@ class NetconfServer:
 
     def stop(self) -> None:
         """Stop the NETCONF server."""
+        if not self.running:
+            logger.warning("server is already stopped")
+            return
+
         self.running = False
         if self._client_socket:
             self._client_socket.close()
